@@ -33,17 +33,17 @@ class FM2_segmentation():
         self.number_of_pool = 5
         self.epochs = 200
         self.roi = 2
-        self.pat = np.load('/data/ALL_train_pats.npy')
-        split = int(.9*len(self.pat))
+        self.data_dir = '/data/BED_OAR_MASKS'
+        self.pat = np.load('/data/CTVSeg/train_pat_postop.npy')
+        split = int(.9 * len(self.pat))
         end = len(self.pat)
-        self.Train_pat = self.pat[0:split]
-        print('train total', len(self.Train_pat))
-        self.Train_sub_pat = np.load('/data/ALL_train_pat_sub.npy')[0:split]
+        self.train_pat = self.pat[0:split]
+        print('train total', len(self.train_pat))
+        self.train_pat_sublist = np.load('/data/s426200/CTVSeg/train_sub_pat_postop.npy')[0:split]
         self.valid_pat = self.pat[split:end]
-        self.valid_sub_pat = np.load('/data/ALL_train_pat_sub.npy')[split:end]
-        print('valid total',len(self.valid_pat))
-        self.data_dir = '/data'
-        self.main_pred_dir = '/data/M1_FM3'
+        self.valid_sub_pat = np.load('/data/train_sub_pat_postop.npy')[split:end]
+        print('valid total', len(self.valid_pat))
+        self.main_pred_dir = '/data/M1_FM2'
         self.roi_interest = 2
 
     def preprocessing_train(self):
@@ -161,15 +161,14 @@ class FM2_segmentation():
         self.preprocessing_valid()
 
         self.FM2_network = unet_3D_ResNeXt_DB(self.img_rows, self.img_cols,self.img_slcs, cardinality=4,channels_in=1, channels_out=1,
-            starting_filter_number=self.starting_filter,kernelsize=(3, 3, 3), number_of_pool=self.number_of_pool, poolsize=self.poolsize,                                                            filter_rate=2, dropout_rate=self.dropout_rate,
+            starting_filter_number=self.starting_filter,kernelsize=(3, 3, 3), number_of_pool=self.number_of_pool, poolsize=self.poolsize, filter_rate=2,
             final_activation='sigmoid')
         self.FM2_network.compile(optimizer=Adam(lr=1e-2), loss=weighted_dice_loss3D, metrics=[dice_coef])
 
         model_checkpoint = ModelCheckpoint('FM2_weights.h5', monitor='val_dice_coef', save_best_only=True, mode='max')
 
-        self.FM2_network.fit(self.traindatagenerator, batch_size=self.batch_size, epochs=200, verbose=1, shuffle=True,
-                                             validation_data = self.validdatagenerator,
-                            callbacks=[model_checkpoint])
+        self.FM2_network.fit(self.traindatagenerator(), steps_per_epoch=int(self.epochs/self.batch_size), epochs= self.epochs, verbose=1,
+                                             validation_data = self.validdatagenerator(), callbacks=[model_checkpoint])
         self.FM2_network.save('FM2_network.h5')
 
 

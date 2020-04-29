@@ -32,16 +32,16 @@ class FM3_segmentation():
         self.poolsize = (2, 2, 1)
         self.number_of_pool = 5
         self.epochs = 200
-        self.pat = np.load('/data/ALL_train_pats.npy')
-        split = int(.9*len(self.pat))
+        self.data_dir = '/data/BED_OAR_MASKS'
+        self.pat = np.load('/data/CTVSeg/train_pat_postop.npy')
+        split = int(.9 * len(self.pat))
         end = len(self.pat)
         self.train_pat = self.pat[0:split]
         print('train total', len(self.train_pat))
-        self.train_sub_pat = np.load('/data/ALL_train_pat_sub.npy')[0:split]
+        self.train_sub_pat = np.load('/data/s426200/CTVSeg/train_sub_pat_postop.npy')[0:split]
         self.valid_pat = self.pat[split:end]
-        self.valid_sub_pat = np.load('/data/ALL_train_pat_sub.npy')[split:end]
-        print('valid total',len(self.valid_pat))
-        self.data_dir = '/data'
+        self.valid_sub_pat = np.load('/data/train_sub_pat_postop.npy')[split:end]
+        print('valid total', len(self.valid_pat))
         self.main_pred_dir = '/data/M1_FM3'
         self.roi_interest = 3
 
@@ -88,7 +88,7 @@ class FM3_segmentation():
                 n = 0
                 for i in current_batch:
                     x1 = self.train_pat[i]
-                    t1 = self.train_pat_sublist[i]
+                    t1 = self.train_sub_pat[i]
                     xof1 = self.x_centtrain[i] - 80
                     xof2 = self.x_centtrain[i] + 80
                     yof1 = self.y_centtrain[i] - 80
@@ -129,7 +129,7 @@ class FM3_segmentation():
                 y_valid = np.ndarray((self.batch_size, self.img_rows, self.img_cols, self.img_slcs, 1), dtype=np.float32)
                 for i in current_batch:
                     x1 = self.valid_pat[i]
-                    t1 = self.valid_pat_sublist[i]
+                    t1 = self.valid_sub_pat[i]
                     xof1 = self.x_centvalid[i] - 80
                     xof2 = self.x_centvalid[i] + 80
                     yof1 = self.y_centvalid[i] - 80
@@ -166,8 +166,8 @@ class FM3_segmentation():
 
         model_checkpoint = ModelCheckpoint('FM3_weights.h5', monitor='val_dice_coef', save_best_only=True, mode='max')
 
-        self.FM3_network.fit(self.traindatagenerator, batch_size=self.batch_size, epochs= self.epochs, verbose=1, shuffle=True,
-                                             validation_data = self.validdatagenerator,callbacks=[model_checkpoint])
+        self.FM3_network.fit(self.traindatagenerator(), steps_per_epoch=int(self.epochs/self.batch_size), epochs= self.epochs, verbose=1,
+                                             validation_data = self.validdatagenerator(), callbacks=[model_checkpoint])
         self.FM3_network.save('FM3_network.h5')
 
 if __name__ == '__main__':

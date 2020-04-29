@@ -43,7 +43,7 @@ class Bladder_segmentation():
         self.valid_pat = self.pat[split:end]
         self.valid_sub_pat = np.load('/data/train_sub_pat_postop.npy')[split:end]
         print('valid total',len(self.valid_pat))
-        self.main_pred_dir = '/home/s426200/Post-op prostate CTV segmentation/data/M1_Bladder'
+        self.main_pred_dir = '/data/M1_Bladder'
         self.roi_interest = 5
 
     def preprocessing_train(self):
@@ -181,8 +181,8 @@ class Bladder_segmentation():
                                                   final_activation='sigmoid')
         self.Bladder_network.compile(optimizer=Adam(lr=1e-2), loss=weighted_dice_loss3D, metrics=[dice_coef])
         model_checkpoint = ModelCheckpoint('Bladder_weights.h5', monitor='val_dice_coef', save_best_only=True, mode='max')
-        self.Bladder_network.fit(self.traindatagenerator(), steps_per_epoch=1, epochs= self.epochs, verbose=1,
-                                             validation_data = self.validdatagenerator(), callbacks=[model_checkpoint]) #int(self.epochs/self.batch_size)
+        self.Bladder_network.fit(self.traindatagenerator(), steps_per_epoch=int(self.epochs/self.batch_size), epochs= self.epochs, verbose=1,
+                                             validation_data = self.validdatagenerator(), callbacks=[model_checkpoint])
         self.Bladder_network.save('Bladder_network.h5')
 
 if __name__ == '__main__':
