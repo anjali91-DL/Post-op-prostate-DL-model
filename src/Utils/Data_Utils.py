@@ -4,6 +4,8 @@ from skimage.measure import label, regionprops
 
 
 data_dir = '/data/mnt/share/dan/edrive/Anjali_Backup/BED_OAR_MASKS'
+# data_dir = '/data/mnt/share/dan/edrive/Anjali_Backup/NUMPYS'
+# data_dir = "/data/s426200/NUMPYS"
 
 def z_calc(pat, pat_s):
     z_dim = []
@@ -43,35 +45,138 @@ def calculating_slicesofinterest_trainloc(train_patlist,train_sublist, z_TRAIN):
         slices = z_end - z_start
     return z_start, z_end, slices
 
-def save_coarse_predictions(loc_dir, pred):
-    valid_patlist = np.load(os.path.join(loc_dir, 'valid.npy'))
-    valid_sublist = np.load(os.path.join(loc_dir, 'valid_sub.npy'))
-    z_VALID = np.load(os.path.join(loc_dir, 'z_valid.npy'))
+# def save_coarse_predictions(loc_dir, pred,valid_patlist,valid_sublist, z_VALID):
+#     y = 0
+#     z_starttrain = []
+#     z_endtrain = [0]*len(valid_patlist)
+#     roi_dict = {0:2,1:4,2:5,3:7}
+#     for i in range(len(valid_patlist)):
+#         # roi1 = np.zeros((512, 512, z_VALID[i]))
+#         # roi2 = np.zeros((512, 512, z_VALID[i]))
+#         # roi3 = np.zeros((512, 512, z_VALID[i]))
+#         # roi4 = np.zeros((512, 512, z_VALID[i]))
+#         roi5 = np.zeros((512, 512, z_VALID[i]))
+#         # roi7 = np.zeros((512, 512, z_VALID[i]))
+#         # roi1[124:380, 100:420, :] = np.transpose(pred[y:y + z_VALID[i], :, :, 0], (1, 2, 0))
+#         # roi2[:, 0:256, :] = roi1[:, 0:256, :]
+#         # roi3[:, 256:512, :] = roi1[:, 256:512, :]
+#         # roi4[124:380, 100:420, :] = np.transpose(pred[y:y + z_VALID[i], :, :, 1], (1, 2, 0))
+#         roi5[124:380, 100:420, :] = np.transpose(pred[y:y + z_VALID[i], :, :, 2], (1, 2, 0))
+#         # roi7[124:380, 100:420, :] = np.transpose(pred[y:y + z_VALID[i], :, :, 3], (1, 2, 0))
+#         z_start1check = 0
+#         count1 = 0
+#         for z1 in range(0, z_VALID[i]):
+#             if np.sum(roi5[:, :, z1]) > 50 and count1 == 0:
+#                 if z_start1check == 0:
+#                     z_start1check = 1
+#                     z_starttrain.append(z1)
+#                     count1 = 1
+#                 else:
+#                     count1 = 1
+#             if count1 == 1 and np.sum(roi5[:, :, z1]) < 50:
+#                 if z1 > z_endtrain[i]:
+#                     z_endtrain[i] = z1
+#                     count1 = 0
+#         slices = z_endtrain[i] - z_starttrain[i]
+#
+#         while slices < 10:
+#             z_start1check = 0
+#             for z1 in range(z_endtrain[i] + 1, z_VALID[i]):
+#                 if (z_start1check == 0) and (np.sum(roi5[:, :, z1]) > 50):
+#                     z_starttrain[i] = z1
+#                     z_start1check = 1
+#                 if z_start1check == 1 and (np.sum(roi5[:, :, z1]) < 50):
+#                     z_endtrain[i] = z1
+#                     z_start1check = 2
+#             slices = z_endtrain[i] - z_starttrain[i]
+#         roi5[:, :, 0:z_starttrain[i]] = 0
+#         roi5[:, :, z_endtrain[i]:z_VALID[i]] = 0
+#         # np.save(os.path.join(loc_dir, 'ROI_{}_{}_2_coarse.npy'.format(valid_patlist[i], valid_sublist[i])), roi2)
+#         # np.save(os.path.join(loc_dir, 'ROI_{}_{}_3_coarse.npy'.format(valid_patlist[i], valid_sublist[i])), roi3)
+#         # np.save(os.path.join(loc_dir, 'ROI_{}_{}_4_coarse.npy'.format(valid_patlist[i], valid_sublist[i])), roi4)
+#         np.save(os.path.join(loc_dir, 'ROI_{}_{}_5_coarse.npy'.format(valid_patlist[i], valid_sublist[i])), roi5)
+#         # np.save(os.path.join(loc_dir, 'ROI_{}_{}_7_coarse.npy'.format(valid_patlist[i], valid_sublist[i])), roi7)
+#         y += z_VALID[i]
+
+def save_coarse_predictions(loc_dir, pred,valid_patlist,valid_sublist, z_VALID, roi_list=[0,1,2,3]):
+    roi_dict = {0: 2, 1: 4, 2: 5, 3: 7}
     y = 0
     for i in range(len(valid_patlist)):
-        roi1 = np.zeros((512, 512, z_VALID[i]))
-        roi2 = np.zeros((512, 512, z_VALID[i]))
-        roi3 = np.zeros((512, 512, z_VALID[i]))
-        roi4 = np.zeros((512, 512, z_VALID[i]))
-        roi5 = np.zeros((512, 512, z_VALID[i]))
-        roi7 = np.zeros((512, 512, z_VALID[i]))
-
-        print(i, pred[y:y + z_VALID[i], :, 0:160, 0].shape)
-        print(i, pred[y:y + z_VALID[i], :, 160:320, 0].shape)
-        roi1[124:380, 100:420, :] = np.transpose(pred[y:y + z_VALID[i], :, :, 0], (1, 2, 0))
-        roi2[:, 0:256, :] = roi1[:, 0:256, :]
-        roi3[:, 256:512, :] = roi1[:, 256:512, :]
-        roi4[124:380, 100:420, :] = np.transpose(pred[y:y + z_VALID[i], :, :, 1], (1, 2, 0))
-        roi5[124:380, 100:420, :] = np.transpose(pred[y:y + z_VALID[i], :, :, 2], (1, 2, 0))
-        roi7[124:380, 100:420, :] = np.transpose(pred[y:y + z_VALID[i], :, :, 3], (1, 2, 0))
-
-        np.save(os.path.join(loc_dir, 'ROI_{}_{}_2_coarse.npy'.format(valid_patlist[i], valid_sublist[i])), roi2)
-        np.save(os.path.join(loc_dir, 'ROI_{}_{}_3_coarse.npy'.format(valid_patlist[i], valid_sublist[i])), roi3)
-        np.save(os.path.join(loc_dir, 'ROI_{}_{}_4_coarse.npy'.format(valid_patlist[i], valid_sublist[i])), roi4)
-        np.save(os.path.join(loc_dir, 'ROI_{}_{}_5_coarse.npy'.format(valid_patlist[i], valid_sublist[i])), roi5)
-        np.save(os.path.join(loc_dir, 'ROI_{}_{}_7_coarse.npy'.format(valid_patlist[i], valid_sublist[i])), roi7)
-
+        if 0 in roi_list:
+            print(roi_dict[0])
+            roi = np.zeros((512, 512, z_VALID[i]))
+            roi1 = np.zeros((512, 512, z_VALID[i]))
+            roi2 = np.zeros((512, 512, z_VALID[i]))
+            roi[124:380, 100:420, :] = np.transpose(pred[y:y + z_VALID[i], :, :, 0], (1, 2, 0))
+            roi = clean_coarse_preds(roi, z_VALID[i])
+            roi1[:, 0:256, :] = roi[:, 0:256, :]
+            roi2[:, 256:512, :] = roi[:, 256:512, :]
+            np.save(os.path.join(loc_dir,'ROI_{}_{}_{}_coarse.npy'.format(valid_patlist[i], valid_sublist[i], 2)),roi1)
+            np.save(os.path.join(loc_dir,'ROI_{}_{}_{}_coarse.npy'.format(valid_patlist[i], valid_sublist[i], 3)),roi2)
+            roi_list.pop(0)
+        for r in roi_list:
+            roi = np.zeros((512, 512, z_VALID[i]))
+            roi[124:380, 100:420, :] = np.transpose(pred[y:y + z_VALID[i], :, :, r], (1, 2, 0))
+            roi = clean_coarse_preds(roi,z_VALID[i])
+            np.save(os.path.join(loc_dir, 'ROI_{}_{}_{}_coarse.npy'.format(valid_patlist[i], valid_sublist[i], roi_dict[r])), roi)
         y += z_VALID[i]
+
+def clean_coarse_preds(roi, z_VALID):
+    z_endtrain = 0
+    z_start1check = 0
+    count1 = 0
+    for z1 in range(0, z_VALID):
+        if np.sum(roi[:, :, z1]) > 50 and count1 == 0:
+            if z_start1check == 0:
+                z_start1check = 1
+                z_starttrain = z1
+                count1 = 1
+            else:
+                count1 = 1
+        if count1 == 1 and np.sum(roi[:, :, z1]) < 50:
+            if z1 > z_endtrain:
+                z_endtrain = z1
+                count1 = 0
+    slices = z_endtrain - z_starttrain
+
+    while slices < 10:
+        z_start1check = 0
+        for z1 in range(z_endtrain + 1, z_VALID):
+            if (z_start1check == 0) and (np.sum(roi[:, :, z1]) > 50):
+                z_starttrain = z1
+                z_start1check = 1
+            if z_start1check == 1 and (np.sum(roi[:, :, z1]) < 50):
+                z_endtrain = z1
+                z_start1check = 2
+        slices = z_endtrain- z_starttrain
+    roi[:, :, 0:z_starttrain] = 0
+    roi[:, :, z_endtrain:z_VALID] = 0
+    return roi
+
+def save_fine_predictions(loc_dir, pred,valid_patlist,valid_sublist, z_VALID, z_start, z_end, x_cent, y_cent, img_rows, img_cols, roi_interest):
+    for i in range(len(valid_patlist)):
+        roi = np.zeros((512, 512, z_VALID[i]))
+        roi[x_cent[i]-int(img_rows/2): x_cent[i]+int(img_rows/2), y_cent[i]-int(img_cols/2): y_cent[i]+int(img_cols/2), z_start[i]:z_end[i]] = pred[i,:, :, :, 0]
+        np.save(os.path.join(loc_dir, 'ROI_{}_{}_{}_fine.npy'.format(valid_patlist[i], valid_sublist[i],roi_interest)), roi)
+
+def predict_with_uncertainty(f, x, n_iter=2, threshold=0.5):
+    pred = np.zeros((n_iter,) + (x.shape[0], x.shape[1], x.shape[2], x.shape[3], 1))
+    for i in range(n_iter):
+        pred[i] = f((x, 1))[0]
+    Pred_Mean = np.mean(pred, axis=0) > threshold
+    Pred = np.mean(pred, axis=0)
+    Pred_var = np.std(pred, axis=0)
+    pred_flat = Pred.flatten()
+    pred_flat_up = Pred.flatten()
+    pred_flat_down = Pred.flatten()
+    var_flat = Pred_var.flatten()
+    for j in range(len(pred_flat)):
+        pred_flat_up[j] = pred_flat[j] + 2 * var_flat[j]
+        pred_flat_down[j] = pred_flat[j] - 2 * var_flat[j]
+
+    bounds_high = pred_flat_up.reshape((160, 160, 64)) > threshold
+    bounds_low = pred_flat_down.reshape((160, 160, 64)) > threshold
+    return Pred_Mean, bounds_high, bounds_low
 
 def calculating_slicesofinterest_segtrain(train_patlist, train_subpatlist, z_TRAIN, roi_interest):
     z_starttrain = []  # [0]*len(TRAIN)
@@ -100,7 +205,7 @@ def calculating_slicesofinterest_segtrain(train_patlist, train_subpatlist, z_TRA
         i = i + 1
     return z_starttrain, z_endtrain
 
-def calculating_slicesofinterest_segvalid(patlist, sublist, z_dim, nroi):
+def calculating_slicesofinterest_segvalid(loc_dir,patlist, sublist, z_dim, nroi):
     z_starttrain = []
     z_endtrain = [0] * len(patlist)
     i = 0
@@ -108,7 +213,7 @@ def calculating_slicesofinterest_segvalid(patlist, sublist, z_dim, nroi):
         j1 = sublist[i]
         z_start1check = 0
         count1 = 0
-        roi_file = np.load(os.path.join(data_dir, 'ROI_{0}_{1}_{2}_coarse.npy'.format(x1, j1, nroi)))
+        roi_file = np.load(os.path.join(loc_dir, 'ROI_{0}_{1}_{2}_coarse.npy'.format(x1, j1, nroi)))
         for z1 in range(0, z_dim[i]):
             SUM = np.sum(roi_file[:, :, z1])
             if SUM > 50 and count1 == 0:
@@ -122,18 +227,6 @@ def calculating_slicesofinterest_segvalid(patlist, sublist, z_dim, nroi):
                 if z1 > z_endtrain[i]:
                     z_endtrain[i] = z1
                     count1 = 0
-        slices = z_endtrain[i] - z_starttrain[i]
-
-        while slices < 10:
-            z_start1check = 0
-            for z1 in range(z_endtrain[i] + 1, z_dim[i]):
-                if (z_start1check == 0) and (np.sum(roi_file[:, :, z1]) > 50):
-                    z_starttrain[i] = z1
-                    z_start1check = 1
-                if z_start1check == 1 and (np.sum(roi_file[:, :, z1]) < 50):
-                    z_endtrain[i] = z1
-                    z_start1check = 2
-            slices = z_endtrain[i] - z_starttrain[i]
         i = i + 1
     return z_starttrain, z_endtrain
 
@@ -187,7 +280,7 @@ def calculate_centroid_segtrain(train_patlist, train_subpatlist, z_starttrainact
         sl1 += 1
     return x_centtrain, y_centtrain
 
-def calculate_centroid_segvalid(train_patlist, train_subpatlist, z_starttrainact, z_endtrainact, nroi):
+def calculate_centroid_segvalid(loc_dir, train_patlist, train_subpatlist, z_starttrainact, z_endtrainact, nroi):
     sl1 = 0
     x_centtrain = []
     y_centtrain = []
@@ -197,7 +290,7 @@ def calculate_centroid_segvalid(train_patlist, train_subpatlist, z_starttrainact
         x_cent = 0
         count = 0
         a = []
-        roi_file = np.load(os.path.join(data_dir, 'ROI_{0}_{1}_{2}_coarse.npy'.format(x1, t1, nroi)))
+        roi_file = np.load(os.path.join(loc_dir, 'ROI_{0}_{1}_{2}_coarse.npy'.format(x1, t1, nroi)))
         for z1 in range(z_starttrainact[sl1], z_endtrainact[sl1]):
             img_roi = roi_file[:,:,z1]
             label_img = label(img_roi)
@@ -227,3 +320,4 @@ def image_histogram_equalization(image, number_bins=128):
     image_equalized = np.interp(image.flatten(), bins[:-1], cdf)
 
     return image_equalized.reshape(image.shape), cdf
+
